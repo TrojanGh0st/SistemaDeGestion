@@ -291,8 +291,13 @@ void actualizarProducto(Inventario<T>& inventario) {
     cout << "Ingrese la nueva cantidad: ";
     nuevaCantidad = validarEntero();
 
-    inventario.actualizarProducto(codigoBarras, nuevoPrecio, nuevaCantidad);
-    cout << "Producto actualizado exitosamente!" << endl;
+    try {
+        inventario.actualizarProducto(codigoBarras, nuevoPrecio, nuevaCantidad);
+        cout << "Producto actualizado exitosamente!" << endl;
+    } catch (const exception& e) {
+        cerr << "Error al actualizar el producto: " << e.what() << endl;
+    }
+    
     pausaYLimpiar();
 }
 
@@ -305,8 +310,13 @@ void eliminarProducto(Inventario<T>& inventario) {
     cin.ignore();
     getline(cin, codigoBarras);
 
-    inventario.eliminarProducto(codigoBarras);
-    cout << "Producto eliminado exitosamente!" << endl;
+    try {
+        inventario.eliminarProducto(codigoBarras);
+        cout << "Producto eliminado exitosamente!" << endl;
+    } catch (const exception& e) {
+        cerr << "Error al eliminar el producto: " << e.what() << endl;
+    }
+    
     pausaYLimpiar();
 }
 
@@ -314,56 +324,47 @@ void eliminarProducto(Inventario<T>& inventario) {
 template<typename T>
 void buscarProducto(Inventario<T>& inventario) {
     int opcion;
-    string entrada;
-
-    cout << "Buscar por: \n1. Nombre \n2. Codigo de Barras \n3. Categoria \n---->: ";
+    cout << "Buscar por: 1. Nombre 2. Codigo de Barras 3. Categoria: ";
     opcion = validarEntero();
+    cin.ignore();
 
-    Producto<T>* producto;
-    vector<Producto<T>*> productos;
-
-    switch (opcion) {
-        case 1:
-            cout << "Ingrese el nombre del producto: ";
-            cin.ignore();
-            getline(cin, entrada);
-            producto = inventario.buscarProductoPorNombre(entrada);
-            if (producto) {
+    if (opcion == 1) {
+        string nombre;
+        cout << "Ingrese el nombre del producto: ";
+        getline(cin, nombre);
+        Producto<T>* producto = inventario.buscarProductoPorNombre(nombre);
+        if (producto) {
+            producto->mostrarInformacion(cout);
+        } else {
+            cout << "Producto no encontrado." << endl;
+        }
+    } else if (opcion == 2) {
+        string codigoBarras;
+        cout << "Ingrese el codigo de barras del producto: ";
+        getline(cin, codigoBarras);
+        Producto<T>* producto = inventario.buscarProductoPorCodigoBarras(codigoBarras);
+        if (producto) {
+            producto->mostrarInformacion(cout);
+        } else {
+            cout << "Producto no encontrado." << endl;
+        }
+    } else if (opcion == 3) {
+        string categoria;
+        cout << "Ingrese la categoria del producto: ";
+        getline(cin, categoria);
+        vector<Producto<T>*> productos = inventario.buscarProductoPorCategoria(categoria);
+        if (!productos.empty()) {
+            for (Producto<T>* producto : productos) {
                 producto->mostrarInformacion(cout);
-            } else {
-                cout << "Producto no encontrado" << endl;
+                cout << "-----------------------------------" << endl;
             }
-            break;
-        case 2:
-            cout << "Ingrese el codigo de barras: ";
-            cin.ignore();
-            getline(cin, entrada);
-            producto = inventario.buscarProductoPorCodigoBarras(entrada);
-            if (producto) {
-                producto->mostrarInformacion(cout);
-            } else {
-                cout << "Producto no encontrado" << endl;
-            }
-            break;
-        case 3:
-            cout << "Ingrese la categoria: ";
-            cin.ignore();
-            getline(cin, entrada);
-            transform(entrada.begin(), entrada.end(), entrada.begin(), ::tolower); // Convertir a minúsculas
-            productos = inventario.buscarProductoPorCategoria(entrada);
-            if (!productos.empty()) {
-                for (Producto<T>* prod : productos) {
-                    prod->mostrarInformacion(cout);
-                    cout << "-----------------------------------" << endl;
-                }
-            } else {
-                cout << "No se encontraron productos en esta categoria" << endl;
-            }
-            break;
-        default:
-            cout << "Opcion no valida!" << endl;
-            break;
+        } else {
+            cout << "No se encontraron productos en esa categoria." << endl;
+        }
+    } else {
+        cout << "Opcion no valida." << endl;
     }
+
     pausaYLimpiar();
 }
 
@@ -371,39 +372,42 @@ void buscarProducto(Inventario<T>& inventario) {
 template<typename T>
 void generarInformes(Inventario<T>& inventario) {
     int opcion;
-    string categoria;
-
-    cout << "Generar informe: \n1. Por Categoria \n2. Productos Proximos a Vencer \n3. Completo  \n----: ";
+    cout << "Generar informe: 1. Por Categoria 2. Proximos a Vencer 3. Completo: ";
     opcion = validarEntero();
+    cin.ignore();
 
-    switch (opcion) {
-        case 1:
-            cout << "Ingrese la categoria: ";
-            cin.ignore();
-            getline(cin, categoria);
-            transform(categoria.begin(), categoria.end(), categoria.begin(), ::tolower); // Convertir a minúsculas
-            inventario.generarInformePorCategoria(categoria, "informe_categoria.txt");
-            break;
-        case 2:
-            inventario.generarInformeProductosProximosAVencer("informe_proximos_vencer.txt");
-            break;
-        case 3:
-            inventario.generarInformeCompleto("informe_completo.txt");
-            break;
-        default:
-            cout << "Opcion no valida!" << endl;
-            break;
+    if (opcion == 1) {
+        string categoria, nombreArchivo;
+        cout << "Ingrese la categoria: ";
+        getline(cin, categoria);
+        cout << "Ingrese el nombre del archivo para el informe: ";
+        getline(cin, nombreArchivo);
+        inventario.generarInformePorCategoria(categoria, nombreArchivo);
+    } else if (opcion == 2) {
+        string nombreArchivo;
+        cout << "Ingrese el nombre del archivo para el informe: ";
+        getline(cin, nombreArchivo);
+        inventario.generarInformeProductosProximosAVencer(nombreArchivo);
+    } else if (opcion == 3) {
+        string nombreArchivo;
+        cout << "Ingrese el nombre del archivo para el informe: ";
+        getline(cin, nombreArchivo);
+        inventario.generarInformeCompleto(nombreArchivo);
+    } else {
+        cout << "Opcion no valida." << endl;
     }
+
     pausaYLimpiar();
 }
 
 int main() {
-    Inventario<time_t> inventario; // Utiliza time_t como tipo de fecha de vencimiento
-
+    Inventario<time_t> inventario;
     int opcion;
-    while (true) {
+
+    do {
         mostrarMenu();
         opcion = validarEntero();
+        system(CLEAR_SCREEN);
 
         switch (opcion) {
             case 1:
@@ -423,12 +427,13 @@ int main() {
                 break;
             case 6:
                 cout << "Saliendo del sistema..." << endl;
-                return 0;
+                break;
             default:
-                cout << "Opcion no valida! Por favor intente de nuevo." << endl;
+                cout << "Opcion no valida. Por favor, intente de nuevo." << endl;
+                pausaYLimpiar();
                 break;
         }
-    }
+    } while (opcion != 6);
 
     return 0;
 }
